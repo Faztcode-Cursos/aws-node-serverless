@@ -1,0 +1,86 @@
+service: aws-lambda-crud-node
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  #* Permisos IAM 
+  iam:
+    role:
+      statements:
+        #* Nos da permisos
+      - Effect: Allow
+        #* Accion a dar permiso 
+        Action:
+          - DynamoDB:*
+        Resource:
+          #* ARN de tabla de dynamodb a dar permisos de lectura y escritura  
+          - arn:aws:dynamodb:us-east-1:279400602374:table/TaskTable
+    
+
+#? Funciones lambda
+functions:
+  hello:
+    handler: src/hello.hello
+    events:
+      - httpApi:
+          path: /
+          method: get
+  createTask:
+    handler: src/addTask.addTask
+    events:
+      - httpApi:
+          path: /tasks
+          method: post
+  getTasks:
+    handler: src/getTasks.getTasks
+    events:
+      - httpApi:
+          path: /tasks
+          method: get
+  getTask:
+    handler: src/getTask.getTask
+    events:
+      - httpApi:
+          #* Path con parametro amigable 
+          path: /tasks/{id}
+          method: get
+  updateTask:
+    handler: src/updateTask.updateTask
+    events:
+      - httpApi:
+          #* Path con parametro amigable 
+          path: /tasks/{id}
+          method: put
+  deleteTask:
+    handler: src/deleteTask.deleteTask
+    events:
+      - httpApi:
+          #* Path con parametro amigable 
+          path: /tasks/{id}
+          method: delete
+
+#? Base de datos DynamoDB
+resources: 
+  Resources:
+    #* Nombre de table de dynamodb
+    TaskTable:
+      #* Indica que se crea una table de dynamodb 
+      Type: AWS::DynamoDB::Table 
+      Properties:
+        #* Nombre de la table 
+        TableName: TaskTable
+        #* Modo de facturación que cobra por operación de lectura y escritura(facturación bajo demanda) 
+        BillingMode: PAY_PER_REQUEST
+        #* Contiene todos los atributos de la tabla con su tipo de dato 
+        AttributeDefinitions:
+          #* Atributo llamado "id"  de tipo cadena
+          - AttributeName: id
+            AttributeType: S
+        #* Define la PK y SK de la tabla referenciando uno de los atributos definidos anteriormente
+        KeySchema:
+          #* Definición de Partition Key 
+          - AttributeName: id
+            KeyType: HASH
+        
